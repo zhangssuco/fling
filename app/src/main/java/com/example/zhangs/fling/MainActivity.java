@@ -196,7 +196,7 @@ public class MainActivity extends Activity
     float[] mGravity;
     float  last_x=0, last_y=0, last_z=0;
     long lastUpdate=System.currentTimeMillis();
-    private static final int SHAKE_THRESHOLD = 2000;
+    private static final int SHAKE_THRESHOLD = 1000;
 
     boolean detectshake()
     {
@@ -204,7 +204,7 @@ public class MainActivity extends Activity
            float x=0, y=0, z=0;
             long curTime = System.currentTimeMillis();
             // only allow one update every 100ms.
-            if ((curTime - lastUpdate) > 200) {
+            if ((curTime - lastUpdate) > 100) {
                 long diffTime = (curTime - lastUpdate);
                 lastUpdate = curTime;
 
