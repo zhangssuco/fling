@@ -1,4 +1,4 @@
-package com.example.zhangs.eightpuzzle2;
+package com.example.zhangs.fling;
 public class MazeCell {
     public int x;
     public int y;

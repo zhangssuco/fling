@@ -1,11 +1,14 @@
-package com.example.zhangs.eightpuzzle2;
+package com.example.zhangs.fling;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.widget.Toast;
 
+import java.util.Random;
 import java.util.Stack;
 
 public class MazeCanvas extends View {
@@ -15,33 +18,43 @@ public class MazeCanvas extends View {
     public final int ROWS = 9;
     final int N_CELLS = COLS * ROWS;
 
-    final int SIZE = 100;
-    final int OFFSET = 100;
-
+    static int SIZE = 65;
+    final int MARGIN = 60;
+    int currentCellId=0;
 
     //ARRAY OF MAZE CELLS
     public MazeCell [] board;
 
     private Paint paint;
 
-
+    Drawable imgpig =null;
 
     public MazeCanvas (Context context){
 
         super(context);
 
+        //Toast.makeText(context, String.valueOf(this.getMeasuredWidth()),Toast.LENGTH_SHORT).show();
+        //get half of the width and height as we are working with a circle
 
+        try{
+            imgpig=context.getResources().getDrawable(R.drawable.pig1, null);
 
-        //TASK 1: DECLARE A MAZE ARRAY OF SIZE N_CELLS TO HOLD THE CELLS
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.toString());
+        }
+
+//TASK 1: DECLARE A MAZE ARRAY OF SIZE N_CELLS TO HOLD THE CELLS
         board = new MazeCell[N_CELLS];
 
         //TASK 2: INSTANTIATE CELL OBJECTS FOR EACH CELL IN THE MAZE
         int cellId = 0;
-        for (int r = 0; r < ROWS; r++){
-            for (int c = 0; c < COLS; c++){
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
                 //STEP 1: GENERATE A MAZE CELL WITH THE X, Y AND CELL ID
-                int x = c * SIZE + OFFSET;
-                int y = r * SIZE + OFFSET;
+                int x = c * SIZE + MARGIN;
+                int y = r * SIZE + MARGIN;
                 MazeCell cell = new MazeCell(x, y, cellId);
 
                 //STEP 2: PLACE THE CELL IN THE MAZE
@@ -50,20 +63,50 @@ public class MazeCanvas extends View {
             }
         }
 
+        //TASK 4: USE A BACKTRACKER METHOD TO BREAK DOWN THE WALLS
+        backtrackMaze();
+
+
         //TASK 3: SET THE PAINT FOR THE MAZE
         paint = new Paint();
         paint.setColor(Color.BLACK);
         paint.setStrokeWidth(2.0f);
 
-        //TASK 4: USE A BACKTRACKER METHOD TO BREAK DOWN THE WALLS
-        backtrackMaze();
     }
 
+    public void	initialize() {
+        //Called from layout when this view should assign a size and position to each of its children.
+    if (SIZE==65) {
+        SIZE = (this.getMeasuredWidth() - 2 * MARGIN) / COLS;
+    }
+        //TASK 2: INSTANTIATE CELL OBJECTS FOR EACH CELL IN THE MAZE
+        int cellId = 0;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                //STEP 1: GENERATE A MAZE CELL WITH THE X, Y AND CELL ID
+                int x = c * SIZE + MARGIN;
+                int y = r * SIZE + MARGIN;
+                //MazeCell cell = new MazeCell(x, y, cellId);
+                board[cellId].x=x;
+                board[cellId].y=y;
+                cellId++;
+            }
+        }
 
+}
 
-    public void onDraw(Canvas canvas){
+    public void setCurrentCellId(int where)
+    {
+        currentCellId=where;
+    }
+
+    Random r=new Random();
+    public void onDraw(Canvas canvas) {
+            initialize();
+
         //TASK 1: FILL THE CANVAS WITH WHITE PAINT
-        canvas.drawRGB(0,  255,  255);
+
+        canvas.drawRGB(0,  r.nextInt(256), r.nextInt(255));
 
         //TASK 2: SET THE LINES OF THE MAZE TO BLACK WITH A STROKE OF 2
         //Paint paint = new Paint();
@@ -71,21 +114,27 @@ public class MazeCanvas extends View {
         //paint.setStrokeWidth(2.0f);
 
         //TASK 3: DRAW THE LINES FOR EVERY CELL
-        for (int i = 0; i < N_CELLS; i++){
+        for (int i = 0; i < N_CELLS; i++) {
             int x = board[i].x;
             int y = board[i].y;
 
             if (board[i].north)
-                canvas.drawLine(x,  y, x+SIZE, y, paint);
+                canvas.drawLine(x, y, x + SIZE, y, paint);
             if (board[i].south)
-                canvas.drawLine(x,  y+SIZE, x+SIZE, y+SIZE, paint);
+                canvas.drawLine(x, y + SIZE, x + SIZE, y + SIZE, paint);
             if (board[i].east)
-                canvas.drawLine(x+SIZE,  y, x+SIZE, y+SIZE, paint);
+                canvas.drawLine(x + SIZE, y, x + SIZE, y + SIZE, paint);
             if (board[i].west)
-                canvas.drawLine(x,  y, x, y+SIZE, paint);
+                canvas.drawLine(x, y, x, y + SIZE, paint);
         }
 
+        if (imgpig != null) {
 
+            int y=(currentCellId/COLS)*SIZE+MARGIN;
+            int x=(currentCellId%COLS)*SIZE+MARGIN;
+            imgpig.setBounds(x, y, x + SIZE, y + SIZE);
+            imgpig.draw(canvas);
+        }
     }
 
     public void backtrackMaze() {
@@ -166,4 +215,7 @@ public class MazeCanvas extends View {
         }
 
     }
+
+
+
 }

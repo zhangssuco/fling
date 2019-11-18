@@ -8,9 +8,9 @@
         android:duration="200" />
     <item
         android:drawable="@drawable/pig2"
-        android:duration="200" />
+        android:duration="400" />
     <item
         android:drawable="@drawable/pig3"
-        android:duration="200" />
+        android:duration="300" />
 
 </animation-list>

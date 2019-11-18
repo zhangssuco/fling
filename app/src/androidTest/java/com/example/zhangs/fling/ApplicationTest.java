@@ -1,4 +1,4 @@
-package com.example.zhangs.eightpuzzle2;
+package com.example.zhangs.fling;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

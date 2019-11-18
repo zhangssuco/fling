@@ -13,7 +13,7 @@
         android:layout_height="40dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="113dp"
+        android:layout_marginBottom="250dp"
         android:background="@drawable/up"
         android:onClick="goUp" />
 
@@ -36,7 +36,7 @@
         android:layout_alignTop="@+id/button2"
         android:layout_toRightOf="@+id/button1"
         android:background="@drawable/right"
-        android:onClick="goRight" />
+         />
 
     <Button
         android:id="@+id/button4"
@@ -46,7 +46,27 @@
         android:layout_below="@+id/button2"
         android:layout_centerHorizontal="true"
         android:background="@drawable/down"
-        android:onClick="goDown" />
+        />
 
+    <Button
+        android:id="@+id/button5"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_below="@+id/button4"
+        android:layout_centerHorizontal="true"
+        android:background="@android:drawable/btn_star"
+        android:onClick="randomize" />
+
+
+    <ImageView
+        android:id="@+id/animation"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_below="@+id/button5"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/pig_animation"
+        />
 
 </RelativeLayout>
