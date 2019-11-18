@@ -101,13 +101,19 @@ public class MazeCanvas extends View {
     }
 
     Random r=new Random();
+
+    String message="CSCI 268 HW 6";
+
+    void setmessage(String message)
+    {
+        this.message=message;
+    }
     public void onDraw(Canvas canvas) {
             initialize();
 
         //TASK 1: FILL THE CANVAS WITH WHITE PAINT
 
         canvas.drawRGB(0,  r.nextInt(256), r.nextInt(255));
-
         //TASK 2: SET THE LINES OF THE MAZE TO BLACK WITH A STROKE OF 2
         //Paint paint = new Paint();
         //paint.setColor(Color.BLACK);
@@ -135,6 +141,8 @@ public class MazeCanvas extends View {
             imgpig.setBounds(x, y, x + SIZE, y + SIZE);
             imgpig.draw(canvas);
         }
+        canvas.drawText(message,10,10,new Paint(Color.RED));
+
     }
 
     public void backtrackMaze() {

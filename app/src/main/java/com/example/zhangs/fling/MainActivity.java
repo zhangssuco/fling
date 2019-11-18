@@ -31,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import android.view.GestureDetector;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.view.GestureDetector.OnGestureListener;
 
@@ -56,12 +57,179 @@ public class MainActivity extends Activity
 
     private int cellId;
 
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_my);
+
+        // CONSTRUCT THE MAZE AND ADD IT TO THE RELATIVE LAYOUT
+        maze = new MazeCanvas(this);
+        gestureDetector = new GestureDetector(MainActivity.this, MainActivity.this);
+
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+
+        cellId =(new Random()).nextInt(maze.board.length) ;
+        maze.setCurrentCellId(cellId);
+
+        relativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
+        relativeLayout.addView(maze, 0);
+
+        // SET THE BACKGROUND OF THE IMAGEVIEW TO THE PIG ANIMATION
+        pig=(ImageView)findViewById(R.id.animation);
+        pig.setBackgroundResource(R.drawable.pig_animation);
+
+        // CREATE AN ANIMATION DRAWABLE OBJECT BASED ON THIS BACKGROUND
+        AnimationDrawable manAnimate = (AnimationDrawable) pig.getBackground();
+        manAnimate.start();
+
+        initListeners();
+
+    }
+
+
+    public void initListeners()
+    {
+        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        lastUpdate=System.currentTimeMillis();
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        mSensorManager.unregisterListener(this);
+
+    }
+
+
+    @Override
+    public void onBackPressed()
+    {
+        super.onBackPressed();
+        mSensorManager.unregisterListener(this);
+
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        initListeners();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        mSensorManager.unregisterListener(this);
+
+    }
+
+    float[] mGravity;
+    float  last_x=0, last_y=0, last_z=0;
+    private static final int SHAKE_THRESHOLD = 1000;
+    long lastUpdate;
+
+    boolean detectshake()
+    {
+           boolean flag=false;
+           float x=0, y=0, z=0;
+            long curTime = System.currentTimeMillis();
+            // only allow one update every 100ms.
+            if ((curTime - lastUpdate) > 100) {
+                long diffTime = (curTime - lastUpdate);
+                lastUpdate = curTime;
+
+                x =  mGravity[0];
+                y = mGravity[1];
+                z = mGravity[2];
+
+                float speed = Math.abs(x- last_x)+Math.abs(y - last_y)+Math.abs( z- last_z) / diffTime * 10000;
+
+                if (speed > SHAKE_THRESHOLD) {
+                    Log.d("sensor", "shake detected w/ speed: " + speed);
+                    Toast.makeText(this, "shake detected w/ speed: " + speed, Toast.LENGTH_SHORT).show();
+                    randomize(null);
+                    flag=true;
+                }
+                last_x = x;
+                last_y = y;
+                last_z = z;
+            }
+        return flag;
+    }
+
+    boolean detecttilt()
+    {
+        float x = mGravity[0];
+        float y = mGravity[1];
+        float TILTTHRESHOLD=10;
+        boolean flag=false;
+        String message="";
+
+        if (x > (-TILTTHRESHOLD) && x < (TILTTHRESHOLD) && y > (-TILTTHRESHOLD) && y < (TILTTHRESHOLD)) {
+            //change is too small
+            //Toast.makeText(getApplicationContext(), "no tilt detected", Toast.LENGTH_SHORT).show();
+            ;
+        }
+        else if (Math.abs(x) > Math.abs(y)) {
+
+            if (x < 0) {
+                message=String.valueOf(x)+", "+ "right tilt detected";
+
+                //Toast.makeText(getApplicationContext(), "right tilt detected", Toast.LENGTH_SHORT).show();
+                maze.setmessage(message);
+
+                goRight(null);
+                flag=true;
+            }
+            if (x > 0) {
+                message=String.valueOf(x)+", "+ "left tilt detected";
+                //Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+                maze.setmessage(message);
+
+                goLeft(null);
+                flag=true;
+            }
+
+
+        }
+
+        return flag;
+    }
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        //If type is accelerometer only assign values to global property mGravity
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+        {
+            mGravity = event.values;
+            if(!detectshake());
+                detecttilt();
+        }
+
+    }
+
+
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // TODO Auto-generated method stub
+
+    }
+
+
     @Override
     public boolean onFling(MotionEvent motionEvent1, MotionEvent motionEvent2, float X, float Y) {
 
 
         if(motionEvent2.getY() - motionEvent1.getY() > 50){
-           Toast.makeText(MainActivity.this , " Swipe Down g" , Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this , " Swipe Down g" , Toast.LENGTH_SHORT).show();
             goDown(null);
             return true;
         }
@@ -122,197 +290,11 @@ public class MainActivity extends Activity
     }
 
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my);
-
-        // CONSTRUCT THE MAZE AND ADD IT TO THE RELATIVE LAYOUT
-        maze = new MazeCanvas(this);
-        gestureDetector = new GestureDetector(MainActivity.this, MainActivity.this);
-
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
 
-        cellId =(new Random()).nextInt(maze.board.length) ;
-        maze.setCurrentCellId(cellId);
-
-        relativeLayout = (RelativeLayout) findViewById(R.id.relativeLayout);
-        relativeLayout.addView(maze, 0);
-
-        // SET THE BACKGROUND OF THE IMAGEVIEW TO THE PIG ANIMATION
-        pig=(ImageView)findViewById(R.id.animation);
-        pig.setBackgroundResource(R.drawable.pig_animation);
-
-        // CREATE AN ANIMATION DRAWABLE OBJECT BASED ON THIS BACKGROUND
-        AnimationDrawable manAnimate = (AnimationDrawable) pig.getBackground();
-        manAnimate.start();
-
-        initListeners();
-
-    }
-
-
-    public void initListeners()
-    {
-        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-        //mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_FASTEST); // _GAME
-    }
-
-    @Override
-    public void onDestroy()
-    {
-        super.onDestroy();
-        mSensorManager.unregisterListener(this);
-
-    }
-
-
-    @Override
-    public void onBackPressed()
-    {
-        super.onBackPressed();
-        mSensorManager.unregisterListener(this);
-
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-        initListeners();
-    }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-
-    }
-
-    float[] mGravity;
-    float  last_x=0, last_y=0, last_z=0;
-    long lastUpdate=System.currentTimeMillis();
-    private static final int SHAKE_THRESHOLD = 1000;
-
-    boolean detectshake()
-    {
-           boolean flag=false;
-           float x=0, y=0, z=0;
-            long curTime = System.currentTimeMillis();
-            // only allow one update every 100ms.
-            if ((curTime - lastUpdate) > 100) {
-                long diffTime = (curTime - lastUpdate);
-                lastUpdate = curTime;
-
-                x =  mGravity[0];
-                y = mGravity[1];
-                z = mGravity[2];
-
-                float speed = Math.abs(x- last_x)+Math.abs(y - last_y)+Math.abs( z- last_z) / diffTime * 10000;
-
-                if (speed > SHAKE_THRESHOLD) {
-                    Log.d("sensor", "shake detected w/ speed: " + speed);
-                    Toast.makeText(this, "shake detected w/ speed: " + speed, Toast.LENGTH_SHORT).show();
-                    randomize(null);
-                    flag=true;
-                }
-                last_x = x;
-                last_y = y;
-                last_z = z;
-            }
-        return flag;
-    }
-
-    boolean detecttilt()
-    {
-        float x = mGravity[0];
-        float y = mGravity[1];
-        float TILTTHRESHOLD=10;
-        boolean flag=false;
-
-        if (x > (-TILTTHRESHOLD) && x < (TILTTHRESHOLD) && y > (-TILTTHRESHOLD) && y < (TILTTHRESHOLD)) {
-            //change is too small
-            //Toast.makeText(getApplicationContext(), "no tilt detected", Toast.LENGTH_SHORT).show();
-            ;
-        }
-        else if (Math.abs(x) > Math.abs(y)) {
-            if (x < 0) {
-                //Toast.makeText(getApplicationContext(), "right tilt detected", Toast.LENGTH_SHORT).show();
-                goRight(null);
-                flag=true;
-            }
-            if (x > 0) {
-                //Toast.makeText(getApplicationContext(), "left tilt detected", Toast.LENGTH_SHORT).show();
-                goLeft(null);
-                flag=true;
-            }
-
-        }
-
-        return flag;
-    }
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        //If type is accelerometer only assign values to global property mGravity
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-        {
-            mGravity = event.values;
-            if(!detectshake());
-                detecttilt();
-        }
-
-    }
-
-
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void goUp(View view) {
-        if (maze.board[cellId].north == false){
-            cellId -= maze.COLS;
-            maze.setCurrentCellId(cellId);
-            scalepig();
-            maze.invalidate();
-        }
-    }
-
-    public void goLeft(View view) {
-        if (maze.board[cellId].west == false){
-            cellId--;
-            maze.setCurrentCellId(cellId);
-            scalepig();
-            maze.invalidate();
-        }
-    }
-
-    public void goRight(View view) {
-        if (maze.board[cellId].east == false){
-            cellId++;
-            maze.setCurrentCellId(cellId);
-
-            scalepig();
-            maze.invalidate();
-        }
-    }
-
-    public void goDown(View view) {
-        if (maze.board[cellId].south == false){
-            scalepig();
-            cellId += maze.COLS;
-            maze.setCurrentCellId(cellId);
-            maze.invalidate();
-        }
-    }
-
+    //================================================
+    // make the move
+    //================================================
     void scalepig()
     {
         float ratio=(maze.SIZE*1.0f)/pig.getWidth();
@@ -338,6 +320,43 @@ public class MainActivity extends Activity
         cellId=r.nextInt(maze.board.length);
         maze.setCurrentCellId(cellId);
         maze.invalidate();
+    }
+
+
+    public void goUp(View view) {
+        if (maze.board[cellId].north == false){
+            cellId -= maze.COLS;
+            maze.setCurrentCellId(cellId);
+            scalepig();
+            maze.invalidate();
+        }
+    }
+
+    public void goLeft(View view) {
+        if (maze.board[cellId].west == false){
+            cellId--;
+            maze.setCurrentCellId(cellId);
+            scalepig();
+            maze.invalidate();
+        }
+    }
+
+    public void goRight(View view) {
+        if (maze.board[cellId].east == false){
+            cellId++;
+            maze.setCurrentCellId(cellId);
+            scalepig();
+            maze.invalidate();
+        }
+    }
+
+    public void goDown(View view) {
+        if (maze.board[cellId].south == false){
+            scalepig();
+            cellId += maze.COLS;
+            maze.setCurrentCellId(cellId);
+            maze.invalidate();
+        }
     }
 
 
